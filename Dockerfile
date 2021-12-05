@@ -1,8 +1,27 @@
-FROM node:16
+# This Dockerfile builds the React client and API together
+# docker build -f Dockerfile -t elephant-app .
+# docker run --rm -p 3000:3000 elephant-app
 
-WORKDIR /code
+# Build step #1: build the React front end
+FROM node:16-alpine as build-step
+WORKDIR /app
+ENV PATH /app/node_modules/.bin:$PATH
+COPY package.json yarn.lock ./
+COPY ./src ./src
+COPY ./public ./public
+RUN yarn install
+RUN yarn build
 
-# COPY package.json /code/package.json
-# COPY package-lock.json /code/package-lock.json
+# Build step #2: build the API with the client as static files
+FROM python:3.9
+WORKDIR /app
+COPY --from=build-step /app/build ./build
 
-# RUN npm install
+RUN mkdir ./api
+COPY api/requirements.txt api/api.py api/.flaskenv ./api/
+RUN pip install -r ./api/requirements.txt
+ENV FLASK_ENV production
+
+EXPOSE 3000
+WORKDIR /app/api
+CMD ["gunicorn", "-b", ":3000", "api:app"]

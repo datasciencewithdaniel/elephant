@@ -1,11 +1,25 @@
-version: '3.3'
 services:
-    elephant:
-        container_name: elephant
-        ports:
-            - '3001:3000'
-        volumes:
-            - '${PWD}:/code'
-        image: elephant
-        stdin_open: true
-        tty: true
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    image: elephant-api
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    image: elephant-client
+    ports:
+      - "3000:80"
+    volumes:
+      - '${PWD}:/app'
+# services:
+#     elephant:
+#         container_name: elephant
+#         ports:
+#             - '3000:3000'
+#         volumes:
+#             - '${PWD}:/app'
+#         image: elephant
+#         stdin_open: true
+#         tty: true
